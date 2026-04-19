@@ -1,0 +1,64 @@
+# ---- Python ----
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# ---- Trained artifacts (too large for git) ----
+*.joblib
+*.pkl
+*.h5
+*.pt
+*.pth
+trained_models/
+
+# ---- Datasets ----
+*.parquet
+*.arff
+data/cicids2017/
+data/cicids2018/
+data/nslkdd/
+data/unsw-nb15/
+data/processed/
+
+# ---- Logs ----
+logs/
+*.log
+/tmp/ngfw-*.log
+
+# ---- Frontend ----
+node_modules/
+app/frontend/dist/
+app/frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+
+# ---- Env / secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
