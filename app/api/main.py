@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field
 
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.honeypot.honeypot_manager import manager as honeypot_manager
 from app.models.ensemble import EnsembleDetector
 from app.simulator.traffic_simulator import TrafficSimulator
 from app.zero_trust.zero_trust import FlowContext, ZeroTrustEngine
@@ -104,6 +105,16 @@ async def lifespan(_app: FastAPI):
     state.zero_trust = ZeroTrustEngine()
     state.simulator = TrafficSimulator(predict_fn=_sim_predict)
     state.loaded_at = time.time()
+    # Surface the most recent model artefact mtime as "last retrained".
+    try:
+        rf_path = os.path.join(MODELS_PATH, "random_forest.joblib")
+        mtime = os.path.getmtime(rf_path)
+        from datetime import datetime, timezone
+        honeypot_manager.last_retrained_at = (
+            datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat()
+        )
+    except OSError:
+        pass
     yield
     if state.simulator and state.simulator.running:
         state.simulator.stop()
@@ -140,6 +151,8 @@ class FlowContextIn(BaseModel):
     prior_violations: int = 0
     session_risk: float = 0.0
     asset_sensitivity: str = "normal"
+    # Hint surfaced to the honeypot capture path; not part of Zero Trust input.
+    attack_type: str | None = None
 
 
 class FlowIn(BaseModel):
@@ -234,7 +247,12 @@ def _run_ensemble(
             "block": THRESHOLD_BLOCK,
         }
 
-        fc = FlowContext(**ctx_in.model_dump()) if ctx_in else FlowContext()
+        if ctx_in:
+            ctx_payload = ctx_in.model_dump()
+            ctx_payload.pop("attack_type", None)
+            fc = FlowContext(**ctx_payload)
+        else:
+            fc = FlowContext()
         zt = state.zero_trust.evaluate(
             risk_score=r["risk_score"],
             model_scores=r["model_scores"],
@@ -248,7 +266,28 @@ def _run_ensemble(
             "principles_applied": zt.principles_applied,
             "effective_risk": zt.effective_risk,
         }
+
+        if r["decision"] == "BLOCK":
+            _capture_to_honeypot(r, ctx_in)
     return results
+
+
+def _capture_to_honeypot(result: dict, ctx_in: FlowContextIn | None) -> None:
+    """Forward a BLOCK decision into the honeypot store. Best-effort: any
+    failure is swallowed so the predict path never fails because of capture."""
+    try:
+        ctx = ctx_in.model_dump() if ctx_in else {}
+        honeypot_manager.capture(
+            src_ip=ctx.get("src_ip"),
+            dst_port=ctx.get("dst_port"),
+            decision=result["decision"],
+            risk_score=float(result["risk_score"]),
+            attack_type=ctx.get("attack_type"),
+            model_scores={k: float(v) for k, v in result["model_scores"].items()},
+            zero_trust=result["zero_trust"],
+        )
+    except Exception:
+        pass
 
 
 # --- Routes ----------------------------------------------------------------
@@ -369,6 +408,73 @@ def demo_stats():
         return {"counts": {}, "flows_per_sec": 0.0, "timeline": [],
                 "attack_types": {}, "top_blocked_ips": [], "heatmap": []}
     return state.simulator.store.stats()
+
+
+# --- Honeypot endpoints ----------------------------------------------------
+
+
+@app.get("/honeypot/status")
+def honeypot_status():
+    return honeypot_manager.stats()
+
+
+@app.get("/honeypot/captures")
+def honeypot_captures(limit: int = 200):
+    limit = max(1, min(limit, 1000))
+    evts = honeypot_manager.events()[-limit:][::-1]
+    return {
+        "count": len(evts),
+        "captures": [
+            {
+                "id": e.id,
+                "timestamp": e.timestamp,
+                "src_ip": e.src_ip,
+                "dst_ip": e.dst_ip,
+                "dst_port": e.dst_port,
+                "attack_type": e.attack_type or "Unknown",
+                "decision": e.decision,
+                "risk_score": e.risk_score,
+                "session_duration_seconds": e.session.get("session_duration_seconds"),
+                "commands_count": len(e.session.get("commands", [])),
+                "verified": e.verified,
+            }
+            for e in evts
+        ],
+    }
+
+
+@app.get("/honeypot/capture/{event_id}")
+def honeypot_capture_detail(event_id: str):
+    event = honeypot_manager.get(event_id)
+    if event is None:
+        raise HTTPException(404, f"capture {event_id} not found")
+    return {
+        "id": event.id,
+        "timestamp": event.timestamp,
+        "src_ip": event.src_ip,
+        "dst_ip": event.dst_ip,
+        "dst_port": event.dst_port,
+        "protocol": event.protocol,
+        "decision": event.decision,
+        "risk_score": event.risk_score,
+        "attack_type": event.attack_type or "Unknown",
+        "model_scores": event.model_scores,
+        "zero_trust": event.zero_trust,
+        "session": event.session,
+        "verified": event.verified,
+    }
+
+
+@app.post("/honeypot/verify/{event_id}")
+def honeypot_verify(event_id: str):
+    event = honeypot_manager.verify(event_id)
+    if event is None:
+        raise HTTPException(404, f"capture {event_id} not found")
+    return {
+        "id": event.id,
+        "verified": event.verified,
+        "feedback": honeypot_manager.feedback_counts(),
+    }
 
 
 if __name__ == "__main__":

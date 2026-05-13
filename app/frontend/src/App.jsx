@@ -5,6 +5,7 @@ import Overview from './pages/Overview.jsx'
 import LiveFlows from './pages/LiveFlows.jsx'
 import Explainability from './pages/Explainability.jsx'
 import ThreatAnalytics from './pages/ThreatAnalytics.jsx'
+import Honeypot from './pages/Honeypot.jsx'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/flows" element={<LiveFlows />} />
             <Route path="/explain" element={<Explainability />} />
             <Route path="/threats" element={<ThreatAnalytics />} />
+            <Route path="/honeypot" element={<Honeypot />} />
           </Routes>
         </div>
       </main>

@@ -310,6 +310,7 @@ class TrafficSimulator:
             "prior_violations": random.randint(2, 6) if label_id != 0 else 0,
             "session_risk": 0.4 if label_id in (2, 3, 4) else 0.0,
             "asset_sensitivity": "high" if dst_port in (22, 3389) else "normal",
+            "attack_type": ATTACK_NAMES[label_id],
         }
         feats_with_ports = {**feats, "src_ip": src_ip, "dst_ip": dst_ip}
         return feats, ctx, dst_port, protocol

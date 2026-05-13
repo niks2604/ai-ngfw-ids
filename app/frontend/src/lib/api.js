@@ -32,6 +32,11 @@ export const api = {
   demoStatus: () => json('/demo/status'),
   demoRecent: (limit = 100) => json(`/demo/recent?limit=${limit}`),
   demoStats: () => json('/demo/stats'),
+
+  honeypotStatus: () => json('/honeypot/status'),
+  honeypotCaptures: (limit = 200) => json(`/honeypot/captures?limit=${limit}`),
+  honeypotCapture: (id) => json(`/honeypot/capture/${id}`),
+  honeypotVerify: (id) => json(`/honeypot/verify/${id}`, { method: 'POST' }),
 }
 
 export function decisionColor(decision) {

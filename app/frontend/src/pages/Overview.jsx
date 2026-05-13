@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import {
   Check,
   Eye,
@@ -46,6 +47,7 @@ function CustomTooltip({ active, payload, label }) {
 
 export default function Overview() {
   const { data: stats } = usePolling(api.demoStats, 2000)
+  const { data: honeypot } = usePolling(api.honeypotStatus, 5000)
 
   const counts = stats?.counts || { ALLOW: 0, INSPECT: 0, BLOCK: 0 }
   const total = (counts.ALLOW || 0) + (counts.INSPECT || 0) + (counts.BLOCK || 0)
@@ -53,8 +55,21 @@ export default function Overview() {
   const timeline = stats?.timeline ?? [] // [{ts, ALLOW, INSPECT, BLOCK}, ...]
   const donut = Object.entries(counts).map(([name, value]) => ({ name, value }))
 
+  const honeypotCount = honeypot?.unique_sources ?? 0
+  const honeypotTotal = honeypot?.captured_sessions ?? 0
+
   return (
     <div className="space-y-6">
+      {honeypotTotal > 0 && (
+        <Link
+          to="/honeypot"
+          className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-accent-yellow transition hover:bg-amber-500/20"
+        >
+          <span role="img" aria-label="honeypot">🍯</span>
+          {honeypotCount} attacker{honeypotCount === 1 ? '' : 's'} captured
+          <span className="text-slate-400">· {honeypotTotal} sessions</span>
+        </Link>
+      )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Check}
@@ -90,7 +105,7 @@ export default function Overview() {
         <div className="glass col-span-1 p-5 xl:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium">Threats over time</div>
+              <div className="text-sm font-medium">Traffic Decisions Over Time</div>
               <div className="text-xs text-slate-400">Rolling window of scored flows</div>
             </div>
           </div>
@@ -116,9 +131,9 @@ export default function Overview() {
                 <YAxis stroke="#64748b" tick={{ fontSize: 11 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area dataKey="ALLOW" stroke="#10b981" fill="url(#gAllow)" stackId="1" />
-                <Area dataKey="INSPECT" stroke="#f59e0b" fill="url(#gInspect)" stackId="1" />
-                <Area dataKey="BLOCK" stroke="#ef4444" fill="url(#gBlock)" stackId="1" />
+                <Area dataKey="INSPECT" stroke="#f59e0b" fill="url(#gInspect)" />
+                <Area dataKey="BLOCK" stroke="#ef4444" fill="url(#gBlock)" />
+                <Area dataKey="ALLOW" stroke="#10b981" fill="url(#gAllow)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -1,11 +1,16 @@
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Activity, Brain, ShieldAlert, Shield } from 'lucide-react'
 
+const HoneypotIcon = (props) => (
+  <span {...props} role="img" aria-label="honeypot">🍯</span>
+)
+
 const items = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
   { to: '/flows', icon: Activity, label: 'Live Flows' },
   { to: '/explain', icon: Brain, label: 'Explainability' },
   { to: '/threats', icon: ShieldAlert, label: 'Threat Analytics' },
+  { to: '/honeypot', icon: HoneypotIcon, label: 'Honeypot' },
 ]
 
 export default function Sidebar() {
