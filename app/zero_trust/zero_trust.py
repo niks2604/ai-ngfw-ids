@@ -47,11 +47,13 @@ class FlowContext:
     when context is absent.
     """
     src_ip: str | None = None
+    dst_ip: str | None = None
     dst_port: int | None = None
     is_internal_src: bool = False
     is_authenticated: bool = False
     prior_violations: int = 0         # count from session store / SIEM
     session_risk: float = 0.0         # rolling risk from prior flows, 0-1
+    spatial_risk_score: float = 0.0   # risk from GNN lateral movement analysis
     asset_sensitivity: str = "normal"  # "low" | "normal" | "high" | "crown_jewel"
 
 
@@ -154,6 +156,11 @@ class ZeroTrustEngine:
         if ctx.session_risk > 0:
             risk = min(1.0, 0.7 * risk + 0.3 * ctx.session_risk)
             notes.append(f"Blended with session risk {ctx.session_risk:.2f}")
+
+        # GNN Spatial Risk blends in (Lateral Movement).
+        if ctx.spatial_risk_score > 0.5:
+            risk = min(1.0, risk + 0.15)
+            notes.append(f"GNN detected lateral movement risk ({ctx.spatial_risk_score:.2f}); raised risk +0.15")
 
         # Crown-jewel assets demand higher scrutiny.
         if ctx.asset_sensitivity == "crown_jewel" and risk < 0.9:

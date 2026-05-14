@@ -37,6 +37,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.honeypot.honeypot_manager import manager as honeypot_manager
 from app.models.ensemble import EnsembleDetector
+from app.models.gnn import gnn_manager
 from app.simulator.traffic_simulator import TrafficSimulator
 from app.zero_trust.zero_trust import FlowContext, ZeroTrustEngine
 
@@ -94,6 +95,10 @@ async def lifespan(_app: FastAPI):
     ensemble = EnsembleDetector(models_path=MODELS_PATH)
     ensemble.load_models()
     state.ensemble = ensemble
+    try:
+        gnn_manager.load_model()
+    except Exception as e:
+        print(f"Warning: GNN model failed to load: {e}")
     state.feature_columns = joblib.load(
         os.path.join(MODELS_PATH, "feature_columns.joblib")
     )
@@ -145,11 +150,13 @@ app.add_middleware(
 class FlowContextIn(BaseModel):
     """Optional context passed to the Zero Trust layer."""
     src_ip: str | None = None
+    dst_ip: str | None = None
     dst_port: int | None = None
     is_internal_src: bool = False
     is_authenticated: bool = False
     prior_violations: int = 0
     session_risk: float = 0.0
+    spatial_risk_score: float = 0.0
     asset_sensitivity: str = "normal"
     # Hint surfaced to the honeypot capture path; not part of Zero Trust input.
     attack_type: str | None = None
@@ -239,7 +246,11 @@ def _run_ensemble(
     results = state.ensemble.analyze(df.values)
     contexts = contexts or [None] * len(results)
 
-    for r, ctx_in in zip(results, contexts):
+    # Compute spatial risk scores using GNN
+    flow_dicts = df.to_dict('records')
+    spatial_risks = gnn_manager.compute_spatial_risk(flow_dicts, contexts)
+
+    for r, ctx_in, s_risk in zip(results, contexts, spatial_risks):
         r["decision"] = score_to_decision(r["risk_score"])
         r["score"] = r["risk_score"]  # frontend alias
         r["thresholds"] = {
@@ -250,9 +261,10 @@ def _run_ensemble(
         if ctx_in:
             ctx_payload = ctx_in.model_dump()
             ctx_payload.pop("attack_type", None)
+            ctx_payload["spatial_risk_score"] = s_risk
             fc = FlowContext(**ctx_payload)
         else:
-            fc = FlowContext()
+            fc = FlowContext(spatial_risk_score=s_risk)
         zt = state.zero_trust.evaluate(
             risk_score=r["risk_score"],
             model_scores=r["model_scores"],

@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  cowrie:
+    image: cowrie/cowrie:latest
+    container_name: cowrie_honeypot
+    ports:
+      - "2222:2222"
+      - "2223:2223"
+    environment:
+      - COWRIE_TELNET_ENABLED=yes
+      - COWRIE_SSH_ENABLED=yes
+    volumes:
+      - ./cowrie/var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie
+    restart: unless-stopped

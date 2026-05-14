@@ -327,6 +327,6 @@ class HoneypotManager:
             "captures_file": str(self.captures_path),
         }
 
-
 # Module-level singleton for the API to share.
-manager = HoneypotManager()
+from app.honeypot.active_redirector import ActiveHoneypotBackend
+manager = HoneypotManager(backend=ActiveHoneypotBackend())
