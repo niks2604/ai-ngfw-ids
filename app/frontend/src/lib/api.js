@@ -36,7 +36,25 @@ export const api = {
   honeypotStatus: () => json('/honeypot/status'),
   honeypotCaptures: (limit = 200) => json(`/honeypot/captures?limit=${limit}`),
   honeypotCapture: (id) => json(`/honeypot/capture/${id}`),
-  honeypotVerify: (id) => json(`/honeypot/verify/${id}`, { method: 'POST' }),
+  // Pass {is_real_attack: bool}; defaults to true for backwards compat.
+  honeypotVerify: (id, isRealAttack = true) =>
+    json(`/honeypot/verify/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ is_real_attack: isRealAttack }),
+    }),
+  honeypotTrainingQueue: () => json('/honeypot/training-queue'),
+
+  // Model performance + retraining (feedback loop).
+  modelMetrics: () => json('/model/metrics'),
+  modelRetrain: () => json('/model/retrain', { method: 'POST' }),
+  modelCrossDataset: () => json('/model/cross_dataset'),
+  modelIterations: () => json('/model/iterations'),
+
+  // Topology-aware GNN endpoints.
+  predictGnn: (features, context) =>
+    json('/predict/gnn', { method: 'POST', body: JSON.stringify({ features, context }) }),
+  networkGraph: () => json('/network/graph'),
+  networkThreats: () => json('/network/threats'),
 }
 
 export function decisionColor(decision) {

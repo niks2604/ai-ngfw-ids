@@ -54,6 +54,9 @@ yarn-error.log*
 .env.*
 !.env.example
 
+# ---- Claude Code (local machine settings) ----
+.claude/settings.local.json
+
 # ---- OS / editors ----
 .DS_Store
 Thumbs.db

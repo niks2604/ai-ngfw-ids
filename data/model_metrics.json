@@ -1,0 +1,92 @@
+{
+  "baseline_accuracy": 41.48,
+  "current_accuracy": 89.15,
+  "improvement": 0.0,
+  "current_version": "v5.1",
+  "verified_captures": 1,
+  "false_positive_count": 0,
+  "training_queue_size": 25,
+  "last_retrained_at": "2026-05-15T04:28:50.736654+00:00",
+  "history": [
+    {
+      "date": "Baseline",
+      "accuracy": 41.48,
+      "version": "v1.0"
+    },
+    {
+      "date": "Round 1",
+      "accuracy": 76.76,
+      "version": "v2.0"
+    },
+    {
+      "date": "Round 2",
+      "accuracy": 82.29,
+      "version": "v3.0"
+    },
+    {
+      "date": "Round 3",
+      "accuracy": 83.06,
+      "version": "v4.0"
+    },
+    {
+      "date": "Round 4",
+      "accuracy": 86.39,
+      "version": "v5.0"
+    },
+    {
+      "date": "+ Threshold",
+      "accuracy": 89.15,
+      "version": "v5.1"
+    }
+  ],
+  "versions": [
+    {
+      "version": "v1.0",
+      "date": "Baseline",
+      "timestamp": "2026-05-15T04:28:50.719861+00:00",
+      "accuracy": 41.48,
+      "samples": 0,
+      "note": "Baseline model \u2014 pre-feedback-loop"
+    },
+    {
+      "version": "v2.0",
+      "date": "Round 1",
+      "timestamp": "2026-05-15T04:28:50.720271+00:00",
+      "accuracy": 76.76,
+      "samples": 400,
+      "note": "Round 1: 400 verified attacks, 100 false positives"
+    },
+    {
+      "version": "v3.0",
+      "date": "Round 2",
+      "timestamp": "2026-05-15T04:28:50.722669+00:00",
+      "accuracy": 82.29,
+      "samples": 800,
+      "note": "Round 2: 800 verified attacks, 200 false positives"
+    },
+    {
+      "version": "v4.0",
+      "date": "Round 3",
+      "timestamp": "2026-05-15T04:28:50.725128+00:00",
+      "accuracy": 83.06,
+      "samples": 1200,
+      "note": "Round 3: 1200 verified attacks, 300 false positives"
+    },
+    {
+      "version": "v5.0",
+      "date": "Round 4",
+      "timestamp": "2026-05-15T04:28:50.732121+00:00",
+      "accuracy": 86.39,
+      "samples": 1600,
+      "note": "Round 4: 1600 verified attacks, 400 false positives"
+    },
+    {
+      "version": "v5.1",
+      "date": "+ Threshold",
+      "timestamp": "2026-05-15T04:28:50.736667+00:00",
+      "accuracy": 89.15,
+      "samples": 1600,
+      "note": "Threshold tuned to 0.60 on validation; evaluated on disjoint test slice"
+    }
+  ]
+}

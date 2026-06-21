@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-05-14T15:34:20+0530",
+  "thresholds": {
+    "inspect": 0.3,
+    "block": 0.7,
+    "gnn": 0.5,
+    "calibrated_on_2018": false
+  },
+  "stage_2017": {
+    "stage": "CICIDS-2017 (training distribution)",
+    "n_samples": 50000,
+    "n_benign": 39000,
+    "n_attack": 11000,
+    "ensemble": {
+      "accuracy": 0.8382,
+      "f1_score": 0.5159746320449923,
+      "roc_auc": 0.7989417016317016,
+      "fpr": 0.03594871794871795,
+      "n": 50000
+    },
+    "gnn": {
+      "accuracy": 0.61356,
+      "f1_score": 0.25684615384615384,
+      "roc_auc": 0.5069925407925409,
+      "fpr": 0.299,
+      "n": 50000
+    },
+    "combined": {
+      "accuracy": 0.72576,
+      "f1_score": 0.4435064935064935,
+      "roc_auc": 0.6926911829836829,
+      "fpr": 0.20964102564102563,
+      "n": 50000
+    }
+  },
+  "stage_2018_unseen": {
+    "stage": "CICIDS-2018 (unseen, no adaptation)",
+    "n_samples": 50000,
+    "n_benign": 38699,
+    "n_attack": 11301,
+    "ensemble": {
+      "accuracy": 0.65318,
+      "f1_score": 0.448248432975914,
+      "roc_auc": 0.6306609568051142,
+      "fpr": 0.3380965916431949,
+      "n": 50000
+    },
+    "gnn": {
+      "accuracy": 0.30582,
+      "f1_score": 0.36080366844072853,
+      "roc_auc": 0.5124985880752448,
+      "fpr": 0.8580066668389364,
+      "n": 50000
+    },
+    "combined": {
+      "accuracy": 0.32126,
+      "f1_score": 0.38076817808594104,
+      "roc_auc": 0.4784989072018513,
+      "fpr": 0.854544045065764,
+      "n": 50000
+    }
+  },
+  "honest_three_stage": {
+    "training_2017": {
+      "accuracy": 0.72576,
+      "ensemble_accuracy": 0.8382,
+      "ensemble_f1": 0.5159746320449923,
+      "ensemble_fpr": 0.03594871794871795,
+      "gnn_accuracy": 0.61356,
+      "gnn_f1": 0.25684615384615384,
+      "gnn_fpr": 0.299,
+      "combined_accuracy": 0.72576,
+      "combined_f1": 0.4435064935064935,
+      "combined_fpr": 0.20964102564102563
+    },
+    "unseen_2018": {
+      "ensemble_accuracy": 0.65318,
+      "ensemble_f1": 0.448248432975914,
+      "ensemble_fpr": 0.3380965916431949,
+      "gnn_accuracy": 0.30582,
+      "gnn_f1": 0.36080366844072853,
+      "gnn_fpr": 0.8580066668389364,
+      "combined_accuracy": 0.32126,
+      "combined_f1": 0.38076817808594104,
+      "combined_fpr": 0.854544045065764,
+      "domain_shift_pp": 40.449999999999996
+    },
+    "adapted_2018": {
+      "ensemble_accuracy": 0.7926560806356089,
+      "ensemble_f1": 0.6678430319536615,
+      "ensemble_fpr": 0.24636012800817145,
+      "samples_added": 289,
+      "improvement_pp": 31.817956875785214
+    }
+  },
+  "feedback_loop_source": "/Users/aniks/sem6el/training/feedback_loop_results.json"
+}

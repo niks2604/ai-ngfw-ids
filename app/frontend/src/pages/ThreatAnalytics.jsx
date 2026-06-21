@@ -8,6 +8,8 @@ import {
   YAxis,
 } from 'recharts'
 import { ShieldAlert } from 'lucide-react'
+import HoneypotImpact from '../components/HoneypotImpact.jsx'
+import ModelPerformance from '../components/ModelPerformance.jsx'
 import { usePolling } from '../hooks/usePolling.js'
 import { api } from '../lib/api.js'
 
@@ -63,6 +65,9 @@ export default function ThreatAnalytics() {
 
   return (
     <div className="space-y-6">
+      <HoneypotImpact />
+      <ModelPerformance />
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="glass p-5 xl:col-span-2">
           <div className="mb-4 flex items-center gap-2">

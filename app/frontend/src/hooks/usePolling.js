@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Poll an async function at a fixed interval.
  * Pauses on window blur to avoid waking the API unnecessarily.
+ *
+ * Returns `{ data, error, loading, refresh }` where `refresh()` triggers
+ * an immediate re-fetch. Use it after a mutation (e.g. verifying a
+ * capture) so the UI reflects the new state without waiting up to
+ * `intervalMs` for the next scheduled tick.
  */
 export function usePolling(fn, intervalMs, deps = []) {
   const [data, setData] = useState(null)
@@ -10,24 +15,29 @@ export function usePolling(fn, intervalMs, deps = []) {
   const [loading, setLoading] = useState(true)
   const timer = useRef(null)
   const alive = useRef(true)
+  // Keep `fn` in a ref so `refresh()` can call the latest closure
+  // without re-running the polling effect on every render.
+  const fnRef = useRef(fn)
+  useEffect(() => {
+    fnRef.current = fn
+  })
+
+  const tick = useCallback(async () => {
+    try {
+      const res = await fnRef.current()
+      if (alive.current) {
+        setData(res)
+        setError(null)
+      }
+    } catch (e) {
+      if (alive.current) setError(e)
+    } finally {
+      if (alive.current) setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     alive.current = true
-
-    const tick = async () => {
-      try {
-        const res = await fn()
-        if (alive.current) {
-          setData(res)
-          setError(null)
-        }
-      } catch (e) {
-        if (alive.current) setError(e)
-      } finally {
-        if (alive.current) setLoading(false)
-      }
-    }
-
     tick()
     timer.current = setInterval(tick, intervalMs)
 
@@ -49,5 +59,5 @@ export function usePolling(fn, intervalMs, deps = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
-  return { data, error, loading }
+  return { data, error, loading, refresh: tick }
 }

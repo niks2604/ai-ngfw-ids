@@ -1,0 +1,171 @@
+{
+  "baseline": {
+    "acc": 0.41482512615277534,
+    "rec": 0.8367878774968224,
+    "f1": 0.39134253762940946,
+    "fpr": 0.707549928541127,
+    "n": 626423,
+    "accuracy_pct": 41.48,
+    "fpr_pct": 70.75,
+    "recall_pct": 83.68
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "captured_this_iter": 500,
+      "verified_real_this_iter": 400,
+      "false_positives_this_iter": 100,
+      "total_verified": 400,
+      "total_false_positives": 100,
+      "total_samples_added": 500,
+      "retrain_seconds": 12.62,
+      "acc": 0.7676043184876673,
+      "rec": 0.982666922295834,
+      "f1": 0.6553175771982744,
+      "fpr": 0.29476682166583607,
+      "n": 626423,
+      "accuracy_pct": 76.76,
+      "fpr_pct": 29.48,
+      "recall_pct": 98.27
+    },
+    {
+      "iteration": 2,
+      "captured_this_iter": 500,
+      "verified_real_this_iter": 400,
+      "false_positives_this_iter": 100,
+      "total_verified": 800,
+      "total_false_positives": 200,
+      "total_samples_added": 1000,
+      "retrain_seconds": 12.55,
+      "acc": 0.8228704884718473,
+      "rec": 0.957260223391489,
+      "f1": 0.7084487279874296,
+      "fpr": 0.21610439997199307,
+      "n": 626423,
+      "accuracy_pct": 82.29,
+      "fpr_pct": 21.61,
+      "recall_pct": 95.73
+    },
+    {
+      "iteration": 3,
+      "captured_this_iter": 500,
+      "verified_real_this_iter": 400,
+      "false_positives_this_iter": 100,
+      "total_verified": 1200,
+      "total_false_positives": 300,
+      "total_samples_added": 1500,
+      "retrain_seconds": 13.97,
+      "acc": 0.8305873187925731,
+      "rec": 0.959482776984854,
+      "f1": 0.7180327868852459,
+      "fpr": 0.2067941531402777,
+      "n": 626423,
+      "accuracy_pct": 83.06,
+      "fpr_pct": 20.68,
+      "recall_pct": 95.95
+    },
+    {
+      "iteration": 4,
+      "captured_this_iter": 500,
+      "verified_real_this_iter": 400,
+      "false_positives_this_iter": 100,
+      "total_verified": 1600,
+      "total_false_positives": 400,
+      "total_samples_added": 2000,
+      "retrain_seconds": 14.37,
+      "acc": 0.8638795191108883,
+      "rec": 0.9916707496325331,
+      "f1": 0.7661178174397459,
+      "fpr": 0.17318171147089956,
+      "n": 626423,
+      "accuracy_pct": 86.39,
+      "fpr_pct": 17.32,
+      "recall_pct": 99.17
+    }
+  ],
+  "config": {
+    "n_iterations": 4,
+    "captures_per_iter": 500,
+    "verified_real_per_iter": 400,
+    "false_positives_per_iter": 100,
+    "train_subsample": 300000,
+    "seed": 42
+  },
+  "final_delta_accuracy_pct": 44.91,
+  "eval_set_size": 626423,
+  "n_original_train": 734129,
+  "threshold_tuning": {
+    "method": "Threshold swept on a 20% validation split of the held-out 2018 eval set; final reported on the disjoint 80% test slice.",
+    "grid": [
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6
+    ],
+    "best_threshold": 0.6,
+    "val_sweep": [
+      {
+        "threshold": 0.3,
+        "accuracy_pct": 70.0,
+        "fpr_pct": 38.66,
+        "f1": 0.5991
+      },
+      {
+        "threshold": 0.35,
+        "accuracy_pct": 74.84,
+        "fpr_pct": 32.42,
+        "f1": 0.6404
+      },
+      {
+        "threshold": 0.4,
+        "accuracy_pct": 77.58,
+        "fpr_pct": 28.88,
+        "f1": 0.6664
+      },
+      {
+        "threshold": 0.45,
+        "accuracy_pct": 81.6,
+        "fpr_pct": 23.64,
+        "f1": 0.7085
+      },
+      {
+        "threshold": 0.5,
+        "accuracy_pct": 86.34,
+        "fpr_pct": 17.37,
+        "f1": 0.765
+      },
+      {
+        "threshold": 0.55,
+        "accuracy_pct": 87.46,
+        "fpr_pct": 14.09,
+        "f1": 0.7683
+      },
+      {
+        "threshold": 0.6,
+        "accuracy_pct": 89.1,
+        "fpr_pct": 11.82,
+        "f1": 0.7914
+      }
+    ],
+    "test_default": {
+      "threshold": 0.5,
+      "accuracy_pct": 86.4,
+      "fpr_pct": 17.31,
+      "f1": 0.7664,
+      "n": 501139
+    },
+    "test_tuned": {
+      "threshold": 0.6,
+      "accuracy_pct": 89.15,
+      "fpr_pct": 11.79,
+      "f1": 0.7931,
+      "n": 501139
+    },
+    "lift_pp": 2.76,
+    "val_size": 125284,
+    "test_size": 501139
+  }
+}

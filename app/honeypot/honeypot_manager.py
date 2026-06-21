@@ -118,6 +118,8 @@ class HoneypotEvent:
     flow_features: dict[str, float] = field(default_factory=dict)
     session: dict[str, Any] = field(default_factory=dict)
     verified: bool = False
+    is_real_attack: bool | None = None       # set by verify_capture; None = pending
+    in_training_queue: bool = False          # set when added to retrain pool
     notes: str | None = None
 
     @staticmethod
@@ -246,14 +248,92 @@ class HoneypotManager:
             return self._index.get(event_id)
 
     def verify(self, event_id: str) -> HoneypotEvent | None:
-        """Mark an event as a verified attack; rewrites the JSONL store."""
+        """Mark an event as a verified attack; rewrites the JSONL store.
+
+        Back-compat shim: defers to :meth:`verify_capture` with
+        ``is_real_attack=True``. Existing callers (the old POST
+        /honeypot/verify with no body) keep working.
+        """
+        return self.verify_capture(event_id, is_real_attack=True)
+
+    # --- verification + training queue (feedback loop) ----------------
+
+    def get_capture(self, event_id: str) -> HoneypotEvent | None:
+        """Alias of :meth:`get` — provided so the API and the spec
+        match name-for-name without leaking dataclass details."""
+        return self.get(event_id)
+
+    def update_capture(self, event: HoneypotEvent) -> HoneypotEvent:
+        """Persist mutations to an existing event (rewrites JSONL)."""
+        with self._lock:
+            if event.id not in self._index:
+                raise KeyError(event.id)
+            self._index[event.id] = event
+            # Replace in events list (in-memory list holds same ref, but
+            # callers may have mutated a copy — be defensive).
+            for i, e in enumerate(self._events):
+                if e.id == event.id:
+                    self._events[i] = event
+                    break
+            self._rewrite_locked()
+            return event
+
+    def verify_capture(
+        self,
+        event_id: str,
+        is_real_attack: bool,
+    ) -> HoneypotEvent | None:
+        """Tag a capture as a verified real attack or a false positive.
+
+        Both real attacks and false positives are added to the retrain
+        queue so the model learns from both directions: real attacks as
+        label=1, false positives as label=0 (teaches the model what NOT
+        to block). The retrain consumer reads ``event.is_real_attack``
+        to assign the label.
+        """
         with self._lock:
             event = self._index.get(event_id)
             if event is None:
                 return None
             event.verified = True
+            event.is_real_attack = bool(is_real_attack)
+            event.in_training_queue = True
             self._rewrite_locked()
             return event
+
+    def get_verified_captures(self) -> list[HoneypotEvent]:
+        """All captures the analyst confirmed as real attacks."""
+        return [e for e in self.events()
+                if e.verified and e.is_real_attack]
+
+    def get_verified_count(self) -> int:
+        return sum(1 for e in self.events()
+                   if e.verified and e.is_real_attack)
+
+    def add_to_training_queue(self, event: HoneypotEvent) -> None:
+        """Mark an event as ready for the next retrain. Idempotent."""
+        with self._lock:
+            stored = self._index.get(event.id)
+            if stored is None:
+                return
+            stored.in_training_queue = True
+            self._rewrite_locked()
+
+    def get_training_queue(self) -> list[HoneypotEvent]:
+        return [e for e in self.events() if e.in_training_queue]
+
+    def clear_training_queue(self) -> list[HoneypotEvent]:
+        """Drain the queue after a retrain. Returns the events that
+        were consumed so the caller can log them."""
+        with self._lock:
+            consumed: list[HoneypotEvent] = []
+            for e in self._events:
+                if e.in_training_queue:
+                    e.in_training_queue = False
+                    consumed.append(e)
+            if consumed:
+                self._rewrite_locked()
+            return consumed
 
     def _rewrite_locked(self) -> None:
         tmp = self.captures_path.with_suffix(".jsonl.tmp")
@@ -279,6 +359,15 @@ class HoneypotManager:
                 data.setdefault("id", uuid.uuid4().hex[:12])
                 data.setdefault("session", {})
                 data.setdefault("verified", False)
+                data.setdefault("is_real_attack", None)
+                data.setdefault("in_training_queue", False)
+                # Legacy migration: events from before the is_real_attack
+                # field existed got verified=True with is_real_attack=None.
+                # The old default verify path treated them as real attacks,
+                # so backfill to keep them counted in the training queue.
+                if data["verified"] and data["is_real_attack"] is None:
+                    data["is_real_attack"] = True
+                    data["in_training_queue"] = True
                 evt = HoneypotEvent(**data)
                 self._events.append(evt)
                 self._index[evt.id] = evt
@@ -301,10 +390,15 @@ class HoneypotManager:
 
     def feedback_counts(self) -> dict[str, int]:
         evts = self.events()
-        verified = sum(1 for e in evts if e.verified)
+        verified_real = sum(1 for e in evts if e.verified and e.is_real_attack)
+        false_positives = sum(1 for e in evts if e.verified and e.is_real_attack is False)
+        verified_total = sum(1 for e in evts if e.verified)
+        in_queue = sum(1 for e in evts if e.in_training_queue)
         return {
-            "pending_review": len(evts) - verified,
-            "verified_attacks": verified,
+            "pending_review": len(evts) - verified_total,
+            "verified_attacks": verified_real,
+            "false_positives": false_positives,
+            "training_queue": in_queue,
             "total_captured": len(evts),
         }
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://localhost:8000/demo/start -H 'Content-Type: application/json' -d '{\"scenario\":\"mixed_realistic\",\"speed\":30}')",
+      "Bash(curl -s -X POST http://localhost:8000/demo/stop)",
+      "Bash(xargs -I{} du -h \"{}\")",
+      "Bash(git add *)"
+    ]
+  }
+}
